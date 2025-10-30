@@ -11,9 +11,9 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId] = useState(() => crypto.randomUUID()); // Generate session ID once
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Your orchestrator API endpoint
   const API_ENDPOINT =
     import.meta.env.VITE_API_ENDPOINT || "YOUR_API_GATEWAY_URL";
 
@@ -35,6 +35,7 @@ function App() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const userInput = input; // Save before clearing
     setInput("");
     setIsLoading(true);
 
@@ -45,8 +46,8 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: input,
-          // Add any other required fields for your orchestrator
+          message: userInput,
+          session_id: sessionId, // ⭐ ADD THIS LINE
         }),
       });
 
@@ -72,13 +73,24 @@ function App() {
     }
   };
 
+  const resetConversation = () => {
+    setMessages([]);
+    window.location.reload(); // Reload to get new session ID
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b px-6 py-4">
+      <div className="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-gray-800">
           Orchestrator Chat
         </h1>
+        <button
+          onClick={resetConversation}
+          className="text-sm px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+        >
+          New Conversation
+        </button>
       </div>
 
       {/* Messages Container */}
